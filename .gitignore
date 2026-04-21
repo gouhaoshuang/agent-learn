@@ -2,6 +2,7 @@
 .env
 .env.*
 
+
 # Python
 __pycache__/
 *.py[cod]
@@ -16,6 +17,7 @@ venv/
 docs/
 # Claude Code 本地配置
 .claude/settings.local.json
+.claude/
 
 # codelens RAG 语料（第三方 cpp-httplib 源码/文档，体积大且可重建）
 codelens/data/
