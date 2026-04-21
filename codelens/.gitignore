@@ -1,0 +1,11 @@
+# RAG 语料（第三方源码 / 文档），体积大且可重建，不纳入版本管理
+data/
+
+# Chroma 向量库持久化目录（由 build_index.py 生成，本地可重建）
+storage/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/

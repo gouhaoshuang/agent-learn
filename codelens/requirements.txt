@@ -1,0 +1,11 @@
+langchain>=1.2
+langchain-openai
+langchain-community
+langchain-chroma 
+langchain-huggingface
+langchain-text-splitters
+langgraph
+python-dotenv
+pydantic>=2
+chromadb
+sentence-transformers
