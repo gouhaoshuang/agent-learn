@@ -4,6 +4,7 @@ langchain-community
 langchain-chroma 
 langchain-huggingface
 langchain-text-splitters
+langgraph-checkpoint-sqlite
 langgraph
 python-dotenv
 pydantic>=2

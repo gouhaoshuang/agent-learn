@@ -3,6 +3,13 @@ from langgraph.graph import StateGraph, END
 from app.graph.state import CodeLensState
 from app.graph.nodes import agent_node, tools_node, reflect_node
 
+from langgraph.checkpoint.memory import MemorySaver
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
 def should_continue(state):
     last = state["messages"][-1]
     if getattr(last, "tool_calls", None):

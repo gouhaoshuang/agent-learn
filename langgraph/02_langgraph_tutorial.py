@@ -586,7 +586,7 @@ DEMOS = {
     # "4": demo_4_conditional_edges,
     # "5": demo_5_react,
     # "6": demo_6_reflect,
-    # "7": demo_7_memory,
+    "7": demo_7_memory,
     # "8": demo_8_stream,
 }
 

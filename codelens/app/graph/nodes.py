@@ -2,9 +2,10 @@ from langgraph.prebuilt import ToolNode
 from app.llm import get_llm
 from app.tools.search_docs import search_docs
 from app.tools.grep_code import grep_code
+from app.tools.list_files import list_files
 from app.tools.read_file import read_file
 
-TOOLS = [search_docs, grep_code , read_file]
+TOOLS = [search_docs, grep_code , read_file , list_files]
 llm_with_tools = get_llm(temperature=0).bind_tools(TOOLS)
 
 def agent_node(state):
