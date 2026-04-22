@@ -27,7 +27,7 @@ from langchain_core.documents import Document
 from tqdm import tqdm
 
 from app.embeddings import get_embeddings
-from ingest.splitter import split_markdown, split_cpp
+from codelens.app.ingest.splitter import split_markdown, split_cpp
 
 
 PERSIST_DIR = str(PROJECT_ROOT / "storage" / "chroma")
