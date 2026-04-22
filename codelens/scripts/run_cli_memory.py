@@ -94,26 +94,70 @@ def _snapshot_messages(graph, config) -> list:
 
 
 def run_turn(graph, question: str, config: dict) -> None:
-    """把一条用户问题喂进图，只**增量**打印本轮新产生的消息。"""
-    # 本轮开始前 state 里已有多少消息 —— 这些全部视为"历史"，不再重复打印。
-    # 即使上轮因网络等原因中途崩溃，checkpointer 也可能把 [System, Human]
-    # 留在 state 里；用长度做起点，能正确跳过那些残骸。
+    """把一条用户问题喂进图，流式打印本轮新产生的消息：
+      · AI 文本内容 → token 级流式（stream_mode="messages"，边生成边打印）
+      · human / tool / system → 一次性打整条（stream_mode="values"）
+      · AI 的 tool_calls → 等 AIMessage 完成时从 values 里拿完整清单补打
+
+    两种 stream_mode 一起开，LangGraph 会以 (mode, payload) 元组逐个 yield。
+    """
     prev_msgs = _snapshot_messages(graph, config)
-    print(f"[debug] before: {len(prev_msgs)} msgs in state")   
     seen = len(prev_msgs)
 
-    # 只在 thread 真的是空的时候才注入 SystemMessage，否则 add_messages 会把它
-    # 追加到末尾，造成 system 消息堆积。
     msgs = [] if prev_msgs else [SystemMessage(SYSTEM)]
     msgs.append(HumanMessage(question))
     init = {"messages": msgs, "iterations": 0}
 
-    # stream_mode="values" 每步 yield 完整 state 快照；seen 之前的是历史，不再打印。
-    for event in graph.stream(init, config=config, stream_mode="values"):
-        all_msgs = event["messages"]
+    ai_streaming = False  # 当前是否正在"边打印 AI token 边走"
+
+    def _end_ai_line():
+        """给正在流式输出的 AI 行补个换行收尾。"""
+        nonlocal ai_streaming
+        if ai_streaming:
+            print()
+            ai_streaming = False
+
+    for mode, payload in graph.stream(
+        init, config=config, stream_mode=["values", "messages"]
+    ):
+        if mode == "messages":
+            chunk, meta = payload
+            # 只打 agent 节点的 LLM 输出；reflect 节点的 critic 也会流 token，
+            # 但它只写 state.reflection、不入 messages，没必要进终端。
+            if meta.get("langgraph_node") not in ("agent", None):
+                continue
+            text = getattr(chunk, "content", "") or ""
+            if not text:
+                continue  # tool_call 构造阶段的空 chunk、纯 metadata 都跳过
+            if not ai_streaming:
+                print("[ai] ", end="", flush=True)
+                ai_streaming = True
+            print(text, end="", flush=True)
+            continue
+
+        # mode == "values"：完整 state 快照；只处理 seen 之后新冒出来的消息
+        all_msgs = payload["messages"]
         while seen < len(all_msgs):
-            _print_message(all_msgs[seen])
+            m = all_msgs[seen]
             seen += 1
+            if m.type == "ai":
+                # AI 的文字内容已通过 messages 模式流过了，这里只做两件事：
+                #   1) 给流式行补换行
+                #   2) 把 tool_calls 清单打出来（messages chunk 里的 tool_call 是
+                #      边解析边拼的，从这里拿已组装好的完整 args 最稳）
+                _end_ai_line()
+                tcs = getattr(m, "tool_calls", None)
+                has_content = bool((getattr(m, "content", "") or "").strip())
+                if tcs and not has_content:
+                    print("[ai]")  # 纯 tool_call，没流过内容，补个头避免孤儿 tool_call 行
+                if tcs:
+                    for tc in tcs:
+                        print(f"  ↳ tool_call: {tc['name']}({tc['args']})")
+            else:
+                _end_ai_line()
+                _print_message(m)  # human / tool / system 整条打
+
+    _end_ai_line()  # 循环结束兜底换行
 
 
 # ----- REPL / demo / once 三种模式 ---------------------------------------

@@ -27,10 +27,12 @@ from langchain_core.documents import Document
 from tqdm import tqdm
 
 from app.embeddings import get_embeddings
-from codelens.app.ingest.splitter import split_markdown, split_cpp
+from app.ingest.splitter import split_markdown, split_cpp
+from app.vectorstore import get_milvus
 
 
-PERSIST_DIR = str(PROJECT_ROOT / "storage" / "chroma")
+# PERSIST_DIR = str(PROJECT_ROOT / "storage" / "chroma")
+PERSIST_DIR = str(PROJECT_ROOT / "storage" / "milvus")
 DEFAULT_DOCS_DIR = str(PROJECT_ROOT / "data" / "docs")
 DEFAULT_CODE_DIR = str(PROJECT_ROOT / "data" / "code")
 CPP_SUFFIXES = {".cpp", ".h", ".hpp", ".cc"}
@@ -85,7 +87,8 @@ def build(docs_dir: str = DEFAULT_DOCS_DIR, code_dir: str = DEFAULT_CODE_DIR) ->
     emb = get_embeddings()
 
     print(f"[init] opening chroma at {PERSIST_DIR}")
-    db = Chroma(persist_directory=PERSIST_DIR, embedding_function=emb)
+    # db = Chroma(persist_directory=PERSIST_DIR, embedding_function=emb)
+    db = get_milvus()
 
     # ---- 4. 分批 embed + 写库 ----
     # 不用 Chroma.from_documents 是因为它一把吞所有 chunk，不给进度条。

@@ -3,6 +3,7 @@ from pathlib import Path
 from langchain_chroma import Chroma
 
 from app.embeddings import get_embeddings
+from app.vectorstore import get_milvus
 
 # 锚定到 codelens/storage/chroma，避免 cwd 不同时找不到向量库
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -23,4 +24,5 @@ def _get_chroma():
 
 def get_retriever(k: int = 5):
     # as_retriever 本身是轻量包装，search_kwargs 指定 k；复用同一个 Chroma 实例即可。
-    return _get_chroma().as_retriever(search_kwargs={"k": k})
+    # return _get_chroma().as_retriever(search_kwargs={"k": k})
+    return get_milvus().as_retriever(search_kwargs={"k": k})
