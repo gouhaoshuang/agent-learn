@@ -8,4 +8,8 @@ langgraph
 python-dotenv
 pydantic>=2
 chromadb
-sentence-transformers
+sentence-transformers<5.0
+transformers<5.0
+torch==2.5.1 
+torchvision==0.20.1 
+torchaudio==2.5.1

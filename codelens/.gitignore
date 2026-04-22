@@ -4,6 +4,9 @@ data/
 # Chroma 向量库持久化目录（由 build_index.py 生成，本地可重建）
 storage/
 
+# tmux 跑脚本时落盘的日志，体积会涨且无版本意义
+.tmux-logs/
+
 # Python
 __pycache__/
 *.py[cod]

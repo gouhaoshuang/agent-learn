@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# 把 codelens/ 加到 sys.path，让 `from app.*` 在任意 cwd 下都能 import
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -21,6 +29,5 @@ chain = (
 )
 
 if __name__ == "__main__":
-    import sys
     q = " ".join(sys.argv[1:]) or "ThreadPool 如何实现？"
     print(chain.invoke(q))
