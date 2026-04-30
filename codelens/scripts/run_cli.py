@@ -13,10 +13,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from app.graph.build import build_graph
 from app.llm import get_llm
 from app.retriever import get_retriever
-
-
-SYSTEM = ("你是 CodeLens，代码/文档智能助手。"
-          "优先使用工具获取证据，不要凭空回答。每次调用工具后总结发现。")
+from app.prompts import SYSTEM_PROMPT as SYSTEM
 
 graph = build_graph()
 
