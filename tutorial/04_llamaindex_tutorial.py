@@ -595,7 +595,7 @@ DEMOS = {
     # "1": demo_1_hello,
     # "2": demo_2_pipeline,
     # "3": demo_3_persistence,
-    # "4": demo_4_milvus_backend,
+    "4": demo_4_milvus_backend,
     # "5": demo_5_retriever_vs_query_engine,
     # "6": demo_6_router,
     "7": demo_7_subquestion,
