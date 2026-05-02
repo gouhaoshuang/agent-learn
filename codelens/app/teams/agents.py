@@ -90,6 +90,7 @@ def make_retriever(client=None):
         name="retriever",
         model_client=client,
         tools=RETRIEVAL_TOOLS,
+        model_client_stream=True, 
         system_message=(
             "你是 Retriever，CodeLens 检索专员。你的工作只有一件事：调用合适的检索工具，"
             "把最相关的片段拿回来塞进对话。\n\n"
@@ -119,6 +120,7 @@ def make_analyst(client=None):
     return AssistantAgent(
         name="analyst",
         model_client=client,
+        model_client_stream=True, 
         system_message=(
             "你是 Analyst，CodeLens 技术解读员。Retriever 把片段拿回来后，你负责：\n"
             "  1. 先声明引用的是文档还是代码（看『引用文件』节里的 [doc] / [code] 标记）\n"
@@ -141,6 +143,7 @@ def make_critic(client=None):
     return AssistantAgent(
         name="critic",
         model_client=client,
+        model_client_stream=True, 
         system_message=(
             "你是 Critic，CodeLens 审稿人。Analyst 解读完后，你的工作是『挑刺』：\n"
             "  1. Analyst 引用的片段是否真的支持结论？还是只是相关？\n"
@@ -164,6 +167,7 @@ def make_reporter(client=None):
     return AssistantAgent(
         name="reporter",
         model_client=client,
+        model_client_stream=True, 
         system_message=(
             "你是 Reporter，CodeLens 终稿撰写员。根据 Retriever 找到的片段、"
             "Analyst 的解读、Critic 的质疑（以及可能的补查结果），写出最终给"

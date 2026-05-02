@@ -1,15 +1,25 @@
-"""侧边栏：Sessions 列表 + New/Clear + 静态元信息。"""
+"""侧边栏：Mode toggle + Sessions 列表 + New/Clear + 静态元信息。"""
 
 import time
 
 import streamlit as st
 
 from ui.runtime import (
+    DEFAULT_MODE,
+    MODE_OPTIONS,
     MODEL_NAME,
     VECTORSTORE_NAME,
     index_size,
     list_threads,
 )
+
+
+# 每档模式的解释文案（hover 时 Streamlit 在 caption 下显示）
+_MODE_HELP = {
+    "Quick": "LangGraph 单 Agent ReAct（快、便宜）",
+    "Deep":  "AutoGen 4-Agent GroupChat: Retriever→Analyst→Critic→Reporter（慢、深）",
+    "Auto":  "LLM 看问题自动挑 Quick / Deep（多一次轻量 LLM 决策）",
+}
 
 
 def _switch_thread(new_id: str) -> None:
@@ -19,6 +29,19 @@ def _switch_thread(new_id: str) -> None:
 
 def render_sidebar() -> None:
     with st.sidebar:
+        # ---------- 模式 toggle（最显眼，置顶） ----------
+        st.markdown("### Mode")
+        mode = st.radio(
+            "运行模式",
+            MODE_OPTIONS,
+            index=MODE_OPTIONS.index(st.session_state.get("mode", DEFAULT_MODE)),
+            label_visibility="collapsed",
+            horizontal=True,
+            key="mode",
+        )
+        st.caption(_MODE_HELP.get(mode, ""))
+
+        st.markdown("---")
         st.markdown("### Sessions")
 
         current = st.session_state.get("thread_id")
