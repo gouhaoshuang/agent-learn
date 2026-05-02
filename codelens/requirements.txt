@@ -1,7 +1,7 @@
 langchain>=1.2
 langchain-openai
 langchain-community
-langchain-chroma 
+langchain-chroma
 langchain-huggingface
 langchain-text-splitters
 langchain-milvus
@@ -12,9 +12,26 @@ pydantic>=2
 chromadb
 sentence-transformers<5.0
 transformers<5.0
-torch==2.5.1 
-torchvision==0.20.1 
+torch==2.5.1
+torchvision==0.20.1
 torchaudio==2.5.1
-pymilvus>=2.4 
+pymilvus>=2.4
 milvus-lite
 streamlit
+
+# LlamaIndex 全家桶 —— 下面的下限不要拿掉。
+# 不加下限时 pip 解析会把元包 llama-index 选成旧的 0.12.x 系列，
+# 连带把 llama-index-core 拖到 0.12.x、openai 拖到 1.x，
+# 而 langchain-openai>=1 强制 openai>=2.26，两边对撞起不来。
+# 同时旧 0.12.x 链路会拉进 llama-index-{agent,program,question-gen}-openai
+# 这些"孤儿包"，它们没有兼容新 core 的版本，必须不装。
+openai>=2.26
+llama-index>=0.14
+llama-index-core>=0.14
+llama-index-llms-openai>=0.7
+llama-index-llms-openai-like>=0.7
+llama-index-embeddings-huggingface>=0.7
+llama-index-vector-stores-milvus>=1.1
+
+autogen-agentchat>=0.4
+autogen-ext[openai]>=0.4
