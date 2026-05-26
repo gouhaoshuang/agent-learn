@@ -10,9 +10,11 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.llm import get_llm
 from app.tools.search_docs import search_docs
 from app.tools.grep_code import grep_code
+from app.tools.web_search import web_search
+from app.tools.calculator import calculator
 
 
 
-llm = get_llm().bind_tools([search_docs, grep_code])
+llm = get_llm().bind_tools([search_docs, grep_code, web_search, calculator])
 msg = llm.invoke("ThreadPool 类在哪个文件？")
 print(msg.tool_calls)   # 应该能看到选中了 grep_code 或 search_docs

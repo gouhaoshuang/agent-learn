@@ -8,7 +8,7 @@ LLM Agent 学习与项目仓库。包含一个完整可演示的中型项目（*
 agent-learn/
 ├── codelens/          # ⭐ 主项目：基于 LangGraph + AutoGen 的 Agentic RAG 助手
 ├── tutorial/          # LangChain / LangGraph / LlamaIndex / AutoGen 学习笔记 + 可跑 demo
-└── .env               # DeepSeek API key（不入库）
+└── .env.example       # 环境变量示例；真实 .env 不入库
 ```
 
 ---
@@ -57,9 +57,9 @@ agent-learn/
 | --- | --- | --- | --- |
 | **Quick** | LangGraph 单 Agent ReAct + reflect | 单一来源、概念解释、API 用法、定义类问题 | 1 个 LLM 多轮（≤50 iter） |
 | **Deep** | AutoGen 4-Agent GroupChat（Retriever / Analyst / Critic / Reporter） | 跨域对比、多目标连问、文档 vs 源码一致性、需多视角质疑 | 4 个角色 × 多轮（≤12 msg） |
-| **Auto** | LLM 路由器 + 关键词 fallback | 默认值；不确定走哪个就用它 | Quick / Deep + 一次轻量决策（≤10 token） |
+| **Auto** | LLM 路由器 + 关键词 fallback | 不确定走哪个就用它 | Quick / Deep + 一次轻量决策（≤10 token） |
 
-UI 默认 Auto，侧边栏可手动切。
+UI 默认 Quick，侧边栏可手动切到 Deep / Auto。
 
 ## 架构总览
 
@@ -88,13 +88,14 @@ UI 默认 Auto，侧边栏可手动切。
                 └────────┬───────────┘   │  msg ≤ 12              │      │
                          │               └───────────┬────────────┘      │
                          │                           │                   │
-                         │  共享 5 个工具             │  共享 4 个 LI 工具 │
+                         │  Quick 6 个工具             │  Deep 6 个工具      │
                          ▼                           ▼                   │
         ┌─────────────────────────────────────────────────────────────┐ │
         │  工具层（LangGraph 直接绑定 / AutoGen 通过 Retriever 持有）│ │
         │  ─────────────────────────────────────────────────────────  │ │
         │  search_docs(LlamaIndex Router) │ grep_code(rg)            │ │
-        │  read_file(行号 + 200 行截断)    │ list_files │ web_search   │ │
+        │  read_file(行号 + 400 行截断)    │ list_files │ web_search   │ │
+        │  calculator                                                │ │
         └─────────────────────┬───────────────────────────────────────┘ │
                               │                                          │
                               ▼                                          │
@@ -153,9 +154,10 @@ codelens/
 │   ├── tools/                    # LangGraph ReAct 工具
 │   │   ├── search_docs.py        #   语义检索（走 LlamaIndex Router）
 │   │   ├── grep_code.py          #   ripgrep / grep 字面匹配
-│   │   ├── read_file.py          #   带行号 + 200 行硬截断
+│   │   ├── read_file.py          #   带行号 + 400 行硬截断
 │   │   ├── list_files.py         #   列目录
-│   │   └── web_search.py         #   DuckDuckGo（免 key）
+│   │   ├── web_search.py         #   DDGS / DuckDuckGo Web 检索（免 key）
+│   │   └── calculator.py         #   安全数学表达式计算
 │   │
 │   ├── graph/                    # ⭐ LangGraph
 │   │   ├── state.py              #   CodeLensState (messages/iterations/reflection)
@@ -163,7 +165,7 @@ codelens/
 │   │   └── build.py              #   StateGraph + AGENT_MAX_ITERATIONS=50
 │   │
 │   └── teams/                    # ⭐ AutoGen GroupChat
-│       ├── retrieval_tools.py    #   4 个 LlamaIndex 工具的 AutoGen 封装
+│       ├── retrieval_tools.py    #   AutoGen 工具封装（LlamaIndex + Web + Calculator）
 │       ├── agents.py             #   Retriever/Analyst/Critic/Reporter 4 角色
 │       ├── groupchat.py          #   build_team(use_selector=False)
 │       ├── runner.py             #   run_groupchat / stream_groupchat
@@ -212,11 +214,11 @@ cd codelens
 pip install -r requirements.txt
 ```
 
-> `requirements.txt` 把 LangChain 1.2+ / LangGraph 1.1+ / LlamaIndex 0.14+ / AutoGen 0.4+ 装齐。注意 LlamaIndex 必须用 0.14+，否则跟 `langchain-openai>=1`（强制 `openai>=2.26`）的依赖会对撞——文件里写了详细注释。
+> `requirements.txt` 把 LangChain 1.2+ / LangGraph 1.1+ / LlamaIndex 0.14+ / AutoGen 0.4+ / DDGS Web 检索依赖装齐。注意 LlamaIndex 必须用 0.14+，否则跟 `langchain-openai>=1`（强制 `openai>=2.26`）的依赖会对撞——文件里写了详细注释。
 
 ### 2. API key
 
-仓库根目录 `.env`：
+仓库根目录 `.env`（可从 `.env.example` 复制）：
 
 ```dotenv
 OPENAI_API_KEY="sk-xxxxxxxx"
@@ -224,6 +226,8 @@ OPENAI_API_BASE="https://api.deepseek.com/v1"
 ```
 
 DeepSeek 用 OpenAI 兼容接口；模型名固定 `deepseek-chat`（别名），**不要用 `deepseek-v4-pro` 真名**——真名是 thinking 模型，AutoGen 序列化时丢 `reasoning_content` 字段会 400。
+
+安全提醒：`.env` / `.env.*` 不应入库。如果密钥曾经被提交或贴到日志里，请在 DeepSeek 控制台轮换旧 key，再把新 key 只放在本地 `.env`。
 
 ### 3. 准备数据
 
@@ -252,6 +256,8 @@ python scripts/run_auto.py "对比 ThreadPool 文档建议和源码实现"
 
 # CLI · 强制模式
 python scripts/run_auto.py --force quick "ThreadPool 怎么实现？"
+python scripts/run_auto.py --force quick "搜索一下 cpp-httplib 最新 release 信息"
+python scripts/run_auto.py --force quick "计算 128 * 0.75 + sqrt(16)"
 python scripts/run_auto.py --force deep "..."
 python scripts/run_groupchat.py --selector "..."     # SelectorGroupChat 替代 RoundRobin
 
@@ -300,7 +306,7 @@ streamlit run ui/app.py
 
 | Agent | 工具 | 职责 |
 | --- | --- | --- |
-| **Retriever** | 4 个 LlamaIndex 工具：`search_docs_only` / `search_code_only` / `search_multi_aspect` / `search_with_router` | 唯一持有检索能力；按问题类型挑工具；拿到结果后**一句话**说查到了什么 |
+| **Retriever** | 6 个工具：4 个 LlamaIndex 检索工具 + `web_search` / `calculator` | 唯一持有工具能力；按问题类型挑工具；拿到结果后**一句话**说查到了什么 |
 | **Analyst** | — | 读 Retriever 拿到的片段，先声明 `[doc]` / `[code]`，结构化解读，**禁止凭印象编造** |
 | **Critic** | — | 唱反调：引用是否支撑结论？有没有漏掉的角度（错误处理路径 / 边界条件）？输出 `需要补查：<具体问题>` 或 `证据充分，可以汇总` |
 | **Reporter** | — | 综合所有发言写最终回答，关键论断标 `[文件名]`，**单独一行 DONE** 触发终止 |
@@ -320,19 +326,20 @@ streamlit run ui/app.py
 2. LLM 解析失败 → 关键词 fallback（`对比 / 差异 / vs / compare / ...`）
 3. 仍不命中 → 默认 `Quick`（更便宜，对简单题影响最小）
 
-入口：`scripts/run_auto.py`，UI 默认。
+入口：`scripts/run_auto.py`；UI 侧边栏也可切到 Auto。
 
 ---
 
-## 工具层（5 个）
+## 工具层（6 个）
 
 | 工具 | 实现 | 设计要点 |
 | --- | --- | --- |
 | `search_docs` | LlamaIndex Router（语义检索） | 顶层 LLMSingleSelector 三选一 doc_only / code_only / multi_aspect |
 | `grep_code` | `rg`（无则降级 `grep`） | 找精确符号名（类名、函数名、宏） |
-| `read_file` | 标准库 + 行号 + **200 行硬截断** | "grep 定位 → read_file 查看" 双步闭环；防 `httplib.h` 1.2 万行一次塞爆 context |
+| `read_file` | 标准库 + 行号 + **400 行硬截断** | "grep 定位 → read_file 查看" 双步闭环；防 `httplib.h` 1.2 万行一次塞爆 context |
 | `list_files` | `pathlib.rglob` | 不知道有哪些文件时探目录 |
-| `web_search` | DuckDuckGo（免 key） | 兜底 |
+| `web_search` | DDGS / DuckDuckGo（免 key） | 查最新 / 网上 / 外部资料，返回标题、摘要、URL |
+| `calculator` | AST 白名单表达式求值 | 精确计算数字、四则/幂运算和常用 `math` 函数，禁止执行任意 Python |
 
 `read_file` 的设计动机来自实测：只有 `grep_code` 时模型陷入 30+ 次"换 pattern 重 grep"死循环；加上 `read_file(path, start, end)` 后循环立即收敛。
 
@@ -390,7 +397,7 @@ graph.invoke({"messages": [...]}, config=config)   # 第一轮
 graph.invoke({"messages": [...]}, config=config)   # 第二轮，自动接续
 ```
 
-`app/memory.py` 的 `trim()` 在 agent 节点入口处把 messages 裁到 token 上限（默认 3000），保留 system + 最近若干轮。Streamlit 侧边栏的 "Sessions" 列出所有 thread_id，可点击切换历史会话。
+`app/memory.py` 提供 `trim()` helper，后续可接到 agent 节点入口做 token 窗口裁剪。当前多轮接续主要依赖 LangGraph checkpoint；Streamlit 侧边栏的 "Sessions" 列出所有 thread_id，可点击切换历史会话。
 
 ---
 
@@ -421,9 +428,14 @@ python scripts/run_groupchat.py "..."        # Deep · 流式
 python scripts/run_groupchat.py --selector "..."    # Deep · LLM 选发言者
 python scripts/run_auto.py "..."             # Auto · 自动分发
 python scripts/run_auto.py --force quick "..." # 跳过 Auto 决策
+python scripts/run_auto.py --force quick "搜索一下 cpp-httplib 最新 release 信息"
+python scripts/run_auto.py --force quick "计算 128 * 0.75 + sqrt(16)"
 
 # 工具调试
 python scripts/run_tools.py
+
+# 测试
+python -m unittest discover -s tests -p 'test_tools.py'
 
 # UI
 streamlit run ui/app.py

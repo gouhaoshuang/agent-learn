@@ -3,8 +3,8 @@
 AutoGen 多 Agent 协同层（阶段 8.3）。
 
 目录结构：
-    retrieval_tools.py —— 把 LlamaIndex Router/SubQuestion 包成 AutoGen 可调用的
-                          Python 函数（Retriever Agent 的工具集）
+    retrieval_tools.py —— 把 LlamaIndex Router/SubQuestion、Web search、calculator
+                          包成 AutoGen 可调用的 Python 函数
     agents.py          —— 4 个 AssistantAgent 的定义（Retriever / Analyst /
                           Critic / Reporter）+ DeepSeek 兼容的 model_client 工厂
     groupchat.py       —— RoundRobinGroupChat 装配 + 终止条件
