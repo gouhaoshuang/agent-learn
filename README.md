@@ -2,14 +2,6 @@
 
 LLM Agent 学习与项目仓库。包含一个完整可演示的中型项目（**CodeLens**）和按官方教程整理的 LangChain / LangGraph / LlamaIndex / AutoGen 笔记。
 
-## 仓库结构
-
-```
-agent-learn/
-├── codelens/          # ⭐ 主项目：基于 LangGraph + AutoGen 的 Agentic RAG 助手
-├── tutorial/          # LangChain / LangGraph / LlamaIndex / AutoGen 学习笔记 + 可跑 demo
-└── .env.example       # 环境变量示例；真实 .env 不入库
-```
 
 ---
 
